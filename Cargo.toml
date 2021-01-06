@@ -1,0 +1,14 @@
+[package]
+name = "whatlang-accuracy-benchmark"
+version = "0.1.0"
+authors = ["Sergey Potapov <blake131313@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+whatlang = { path = "../whatlang-rs" }
+whatlang-corpora = { path = "../whatlang-corpora" }
+enum-map = "*"
+enum-map-derive = "*"
+rayon = "*"

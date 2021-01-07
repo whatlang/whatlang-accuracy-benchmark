@@ -7,8 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-whatlang = { path = "../whatlang-rs" }
+whatlang = { path = "../whatlang-rs", features = ["enum-map"] }
 whatlang-corpora = { path = "../whatlang-corpora" }
 enum-map = "*"
 enum-map-derive = "*"
 rayon = "*"
+structopt = { version = "0.3" }
+prettytable-rs = "^0.8"

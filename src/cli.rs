@@ -7,21 +7,28 @@ use crate::benchmark;
 #[structopt(name = "whatlang-occuracy-benchmark", about = "Runs occuracy benchmarks for whatlang library")]
 struct Opt {
     #[structopt(short="s", long="script")]
-    script: Option<Script>
+    script: Option<Script>,
+
+    #[structopt(short="l", long="lang", use_delimiter = true)]
+    langs: Option<Vec<Lang>>
+}
+
+impl Opt {
+    fn langs(&self) -> Vec<Lang> {
+        if let Some(ref langs) = self.langs {
+            return langs.to_vec();
+        }
+        if let Some(script) = self.script {
+            return script.langs().to_vec();
+        }
+
+        // Return all
+        Lang::values().to_vec()
+    }
 }
 
 pub fn run() {
     let opt = Opt::from_args();
-
-    println!("{:?}", opt.script);
-
-    let langs: Vec<Lang> =
-        match opt.script {
-            None => Lang::values().collect(),
-            // TODO: Provide ability to fetch langs by script from whatlang lib
-            Some(Script::Cyrillic) => vec![Lang::Rus, Lang::Ukr, Lang::Bul, Lang::Bel, Lang::Srp, Lang::Mkd],
-            Some(script) => panic!(format!("Script {} is not yet supported", script))
-        };
-
+    let langs = opt.langs();
     benchmark::run(langs);
 }

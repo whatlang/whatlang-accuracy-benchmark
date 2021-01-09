@@ -2,9 +2,9 @@ use whatlang::Lang;
 use enum_map::{Enum, EnumMap};
 use std::fmt;
 // use prettytable::{Table, Row, Cell};
-use prettytable::{table, row, cell};
+use prettytable::{table, row, cell, Table, Row, Cell};
 
-#[derive(Debug, Enum)]
+#[derive(Debug, Clone, Copy, Enum)]
 pub enum Size {
     // <20 chars
     Under20,
@@ -165,6 +165,16 @@ impl OverallReport {
 
         sum / len as f64
     }
+
+    pub fn avg_for_size(&self, size: Size) -> f64 {
+        let len = self.lang_reports.len() as f64;
+        let sum: f64 = self.lang_reports
+            .iter()
+            .map(|lr| lr.accuracy_for_size(size))
+            .sum();
+
+        sum / len
+    }
 }
 
 impl fmt::Display for OverallReport {
@@ -172,11 +182,54 @@ impl fmt::Display for OverallReport {
         writeln!(f, "\n\nOVERALL: {} languages", self.lang_reports.len())?;
         writeln!(f, "  Avg: {:.2}%", self.avg_accuracy() * 100.0)?;
 
-        let t = table![
-            ["LANG", "<= 20", "21-50", "51-100", "> 100"],
-            ["Eng", "93.54%"]
-        ];
+        let mut table = Table::new();
+        table.add_row(row!["LANG", "AVG", "<= 20", "21-50", "51-100", "> 100"]);
 
-        t.fmt(f)
+        for lang_report in &self.lang_reports {
+            let lang = lang_report.lang;
+            let lang_name = lang.eng_name();
+            let under20 = lang_report.accuracy_for_size(Size::Under20);
+            let under50 = lang_report.accuracy_for_size(Size::Under50);
+            let under100 = lang_report.accuracy_for_size(Size::Under100);
+            let over100 = lang_report.accuracy_for_size(Size::Over100);
+            let avg = lang_report.avg_accuracy();
+
+            table.add_row(
+                Row::new(vec![
+                    Cell::new(lang_name),
+                    Cell::new(&format_accuracy(avg)),
+                    Cell::new(&format_accuracy(under20)),
+                    Cell::new(&format_accuracy(under50)),
+                    Cell::new(&format_accuracy(under100)),
+                    Cell::new(&format_accuracy(over100)),
+                ])
+            );
+        }
+
+        let avg = |size: Size| { format_accuracy(self.avg_for_size(size)) };
+        let avg_under20 = avg(Size::Under20);
+        let avg_under50 = avg(Size::Under50);
+        let avg_under100 = avg(Size::Under100);
+        let avg_over100 = avg(Size::Over100);
+        let avg_all = format_accuracy(self.avg_accuracy());
+
+        table.add_row(
+            row!["AVG", avg_all, avg_under20, avg_under50, avg_under100, avg_over100]
+        );
+
+        table.fmt(f)
+    }
+}
+
+fn format_accuracy(accuracy: f64) -> String {
+    use colored::Colorize;
+
+    let s = format!("{:.2}%", accuracy * 100.0);
+    match accuracy {
+        (0.00..=0.6) => s.red().bold().to_string(),
+        (0.6..=0.8) => s.red().to_string(),
+        (0.8..=0.95) => s,
+        (0.95..=0.99) => s.green().to_string(),
+        _ => s.green().bold().to_string()
     }
 }

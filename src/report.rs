@@ -135,9 +135,9 @@ impl fmt::Display for LangReport {
 
             wrong_langs.sort_by(|a, b| b.1.cmp(&a.1));
 
-            for (_wrong_lang, count) in &wrong_langs {
-                let _wrong_pct = (*count as f64 / counter.total() as f64) * 100.0;
-                // println!("    {:.2}% : {}", wrong_pct, wrong_lang.eng_name());
+            for (wrong_lang, count) in wrong_langs.iter().take(2) {
+                let wrong_pct = (*count as f64 / counter.total() as f64) * 100.0;
+                writeln!(f, "    {:.2}% : {}", wrong_pct, wrong_lang.eng_name())?;
             }
         }
         writeln!(f, "  Avg: {:.2}%", self.avg_accuracy() * 100.0)?;

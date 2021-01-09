@@ -176,9 +176,19 @@ impl OverallReport {
         sum / len
     }
 
-    pub fn to_prettytable(&self) -> Table {
+    pub fn to_prettytable(&self, highlight: bool) -> Table {
+        use prettytable::format::{FormatBuilder, LinePosition, LineSeparator};
+        let markdown_format = FormatBuilder::new()
+            .column_separator('|')
+            .left_border('|')
+            .right_border('|')
+            .padding(1, 1)
+            .separator(LinePosition::Title, LineSeparator::new('-', '|', '|', '|'))
+            .build();
+
         let mut table = Table::new();
-        table.set_format(*prettytable::format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+        //table.set_format(*prettytable::format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+        table.set_format(markdown_format);
         table.set_titles(row!["LANG", "AVG", "<= 20", "21-50", "51-100", "> 100"]);
 
         for lang_report in &self.lang_reports {
@@ -193,21 +203,21 @@ impl OverallReport {
             table.add_row(
                 Row::new(vec![
                     Cell::new(lang_name),
-                    Cell::new(&format_accuracy(avg)),
-                    Cell::new(&format_accuracy(under20)),
-                    Cell::new(&format_accuracy(under50)),
-                    Cell::new(&format_accuracy(under100)),
-                    Cell::new(&format_accuracy(over100)),
+                    Cell::new(&format_accuracy(avg, highlight)),
+                    Cell::new(&format_accuracy(under20, highlight)),
+                    Cell::new(&format_accuracy(under50, highlight)),
+                    Cell::new(&format_accuracy(under100, highlight)),
+                    Cell::new(&format_accuracy(over100, highlight)),
                 ])
             );
         }
 
-        let avg = |size: Size| { format_accuracy(self.avg_for_size(size)) };
+        let avg = |size: Size| { format_accuracy(self.avg_for_size(size), highlight) };
         let avg_under20 = avg(Size::Under20);
         let avg_under50 = avg(Size::Under50);
         let avg_under100 = avg(Size::Under100);
         let avg_over100 = avg(Size::Over100);
-        let avg_all = format_accuracy(self.avg_accuracy());
+        let avg_all = format_accuracy(self.avg_accuracy(), highlight);
 
         table.add_row(
             row!["AVG", avg_all, avg_under20, avg_under50, avg_under100, avg_over100]
@@ -218,7 +228,7 @@ impl OverallReport {
 
 impl fmt::Display for OverallReport {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let table = self.to_prettytable();
+        let table = self.to_prettytable(true);
         table.fmt(f)?;
 
         writeln!(f, "\nOVERALL: {} languages", self.lang_reports.len())?;
@@ -227,19 +237,23 @@ impl fmt::Display for OverallReport {
     }
 }
 
-fn format_accuracy(accuracy: f64) -> String {
+fn format_accuracy(accuracy: f64, highlight: bool) -> String {
     use colored::Colorize;
 
     let s = format!("{:.2}%", accuracy * 100.0);
-    if (0.0..=0.6).contains(&accuracy) {
-        s.red().bold().to_string()
-    } else if (0.6..=0.8).contains(&accuracy) {
-        s.red().to_string()
-    } else if (0.8..=0.95).contains(&accuracy) {
-        s
-    } else if (0.95..=0.99).contains(&accuracy) {
-        s.green().to_string()
+    if highlight {
+        if (0.0..=0.6).contains(&accuracy) {
+            s.red().bold().to_string()
+        } else if (0.6..=0.8).contains(&accuracy) {
+            s.red().to_string()
+        } else if (0.8..=0.95).contains(&accuracy) {
+            s
+        } else if (0.95..=0.99).contains(&accuracy) {
+            s.green().to_string()
+        } else {
+            s.green().bold().to_string()
+        }
     } else {
-        s.green().bold().to_string()
+        s
     }
 }

@@ -1,31 +1,32 @@
 use whatlang_corpora::Corpus;
 use whatlang::Lang;
+use whatlang::dev::{self, Method};
 use rayon::prelude::*;
 
 use crate::report::{LangReport, OverallReport, size};
 
-pub fn run(langs: Vec<Lang>) -> OverallReport {
+pub fn run(langs: Vec<Lang>, method: Method) -> OverallReport {
     let lang_reports: Vec<LangReport> =
         langs.par_iter().map(|&lang| {
-            let lang_report = benchmark_lang(lang);
+            let lang_report = benchmark_lang(lang, method);
             println!("{}", lang_report);
             lang_report
         }).collect();
 
     let overall_report = OverallReport::new(lang_reports);
     println!("{}", overall_report);
+    println!("Method used: {}", method);
     overall_report
 }
 
-fn benchmark_lang(lang: Lang) -> LangReport {
+fn benchmark_lang(lang: Lang, method: Method) -> LangReport {
     let mut lang_report = LangReport::new(lang);
     let corpus = Corpus::load(lang);
-    let detector = whatlang::Detector::new();
 
     for (_num, sentence) in corpus.sentences().enumerate() {
         let size = size(sentence);
 
-        let lang_opt = detector.detect_lang(sentence);
+        let lang_opt = dev::detect_by_method(sentence, method);
         if lang_opt == Some(lang) {
             lang_report.inc_correct(size);
         } else {

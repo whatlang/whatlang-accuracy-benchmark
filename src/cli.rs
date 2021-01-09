@@ -1,4 +1,5 @@
 use whatlang::{Script, Lang};
+use whatlang::dev::Method;
 use structopt::StructOpt;
 
 use crate::benchmark;
@@ -14,8 +15,10 @@ struct Opt {
     langs: Option<Vec<Lang>>,
 
     #[structopt(short="w", long="write")]
-    write_report: bool
+    write_report: bool,
 
+    #[structopt(short="m", long="method", default_value = "trigram")]
+    method: Method,
 }
 
 impl Opt {
@@ -35,9 +38,12 @@ impl Opt {
 pub fn run() {
     let opt = Opt::from_args();
     let langs = opt.langs();
-    let report = benchmark::run(langs);
+    let report = benchmark::run(langs, opt.method);
 
-    save_report(&report)
+    if opt.write_report {
+        save_report(&report);
+        println!("Report is written in ./reports");
+    }
 }
 
 fn save_report(report: &OverallReport) {

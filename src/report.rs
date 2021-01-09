@@ -2,7 +2,7 @@ use whatlang::Lang;
 use enum_map::{Enum, EnumMap};
 use std::fmt;
 // use prettytable::{Table, Row, Cell};
-use prettytable::{table, row, cell, Table, Row, Cell};
+use prettytable::{row, cell, Table, Row, Cell};
 
 #[derive(Debug, Clone, Copy, Enum)]
 pub enum Size {
@@ -130,13 +130,13 @@ impl fmt::Display for LangReport {
             let mut wrong_langs: Vec<(Lang, u32)> =
                 counter.wrong.langs
                     .into_iter()
-                    .filter(|(lang, count)| *count > 0)
+                    .filter(|(_lang, count)| *count > 0)
                     .collect();
 
             wrong_langs.sort_by(|a, b| b.1.cmp(&a.1));
 
-            for (wrong_lang, count) in &wrong_langs {
-                let wrong_pct = (*count as f64 / counter.total() as f64) * 100.0;
+            for (_wrong_lang, count) in &wrong_langs {
+                let _wrong_pct = (*count as f64 / counter.total() as f64) * 100.0;
                 // println!("    {:.2}% : {}", wrong_pct, wrong_lang.eng_name());
             }
         }
@@ -231,11 +231,15 @@ fn format_accuracy(accuracy: f64) -> String {
     use colored::Colorize;
 
     let s = format!("{:.2}%", accuracy * 100.0);
-    match accuracy {
-        (0.00..=0.6) => s.red().bold().to_string(),
-        (0.6..=0.8) => s.red().to_string(),
-        (0.8..=0.95) => s,
-        (0.95..=0.99) => s.green().to_string(),
-        _ => s.green().bold().to_string()
+    if (0.0..=0.6).contains(&accuracy) {
+        s.red().bold().to_string()
+    } else if (0.6..=0.8).contains(&accuracy) {
+        s.red().to_string()
+    } else if (0.8..=0.95).contains(&accuracy) {
+        s
+    } else if (0.95..=0.99).contains(&accuracy) {
+        s.green().to_string()
+    } else {
+        s.green().bold().to_string()
     }
 }

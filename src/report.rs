@@ -175,15 +175,11 @@ impl OverallReport {
 
         sum / len
     }
-}
 
-impl fmt::Display for OverallReport {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "\n\nOVERALL: {} languages", self.lang_reports.len())?;
-        writeln!(f, "  Avg: {:.2}%", self.avg_accuracy() * 100.0)?;
-
+    pub fn to_prettytable(&self) -> Table {
         let mut table = Table::new();
-        table.add_row(row!["LANG", "AVG", "<= 20", "21-50", "51-100", "> 100"]);
+        table.set_format(*prettytable::format::consts::FORMAT_NO_BORDER_LINE_SEPARATOR);
+        table.set_titles(row!["LANG", "AVG", "<= 20", "21-50", "51-100", "> 100"]);
 
         for lang_report in &self.lang_reports {
             let lang = lang_report.lang;
@@ -216,8 +212,18 @@ impl fmt::Display for OverallReport {
         table.add_row(
             row!["AVG", avg_all, avg_under20, avg_under50, avg_under100, avg_over100]
         );
+        table
+    }
+}
 
-        table.fmt(f)
+impl fmt::Display for OverallReport {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let table = self.to_prettytable();
+        table.fmt(f)?;
+
+        writeln!(f, "\nOVERALL: {} languages", self.lang_reports.len())?;
+        writeln!(f, "AVG: {:.2}%", self.avg_accuracy() * 100.0)
+
     }
 }
 

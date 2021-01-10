@@ -31,7 +31,7 @@ impl Opt {
         }
 
         // Return all
-        Lang::values().to_vec()
+        Lang::all().to_vec()
     }
 }
 

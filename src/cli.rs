@@ -14,8 +14,8 @@ struct Opt {
     #[structopt(short="l", long="lang", use_delimiter = true)]
     langs: Option<Vec<Lang>>,
 
-    #[structopt(short="w", long="write")]
-    write_report: bool,
+    #[structopt(short="r", long="save-report")]
+    save_report: bool,
 
     #[structopt(short="m", long="method", default_value = "trigram")]
     method: Method,
@@ -40,7 +40,7 @@ pub fn run() {
     let langs = opt.langs();
     let report = benchmark::run(langs, opt.method);
 
-    if opt.write_report {
+    if opt.save_report {
         save_report(&report);
         println!("Report is written in ./reports");
     }

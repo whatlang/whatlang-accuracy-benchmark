@@ -1,5 +1,4 @@
-use whatlang::{Script, Lang};
-use whatlang::dev::Method;
+use whatlang::{Script, Lang, Method};
 use structopt::StructOpt;
 
 use crate::benchmark;

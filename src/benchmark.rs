@@ -1,6 +1,6 @@
 use whatlang_corpora::Corpus;
 use whatlang::Lang;
-use whatlang::dev::{self, Method};
+use whatlang::{Method, detect_with_options, Options};
 use rayon::prelude::*;
 
 use crate::report::{LangReport, OverallReport, size};
@@ -23,10 +23,13 @@ fn benchmark_lang(lang: Lang, method: Method) -> LangReport {
     let mut lang_report = LangReport::new(lang);
     let corpus = Corpus::load(lang);
 
+    let options = Options::new().method(method);
+
     for (_num, sentence) in corpus.sentences().enumerate() {
         let size = size(sentence);
 
-        let lang_opt = dev::detect_by_method(sentence, method);
+        let output = detect_with_options(sentence, &options);
+        let lang_opt = output.map(|o| o.lang());
         if lang_opt == Some(lang) {
             lang_report.inc_correct(size);
         } else {

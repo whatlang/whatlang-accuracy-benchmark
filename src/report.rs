@@ -164,6 +164,7 @@ impl fmt::Display for LangReport {
                 accuracy_msg = accuracy_msg.red().to_string();
             }
             writeln!(f, "{}", accuracy_msg)?;
+            writeln!(f, "            number of reliable: {} ({:.2}%)", counter.reliable_total(), reliable_pct)?;
 
             wrong_langs.sort_by(|a, b| b.1.cmp(&a.1));
             writeln!(f, "        Top false detections:")?;

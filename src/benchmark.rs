@@ -34,7 +34,7 @@ fn benchmark_lang(lang: Lang, method: Method) -> LangReport {
             if lang == info.lang() {
                 lang_report.inc_correct(size, info.is_reliable());
             } else {
-                lang_report.inc_wrong(size, Some(lang), info.is_reliable());
+                lang_report.inc_wrong(size, Some(info.lang()), info.is_reliable());
             }
         } else {
             lang_report.inc_wrong(size, None, false);

@@ -23,17 +23,21 @@ fn benchmark_lang(lang: Lang, method: Method) -> LangReport {
     let mut lang_report = LangReport::new(lang);
     let corpus = Corpus::load(lang);
 
-    let options = Options::new().method(method);
+    let options = Options::new().set_method(method);
 
     for (_num, sentence) in corpus.sentences().enumerate() {
         let size = size(sentence);
 
-        let output = detect_with_options(sentence, &options);
-        let lang_opt = output.map(|o| o.lang());
-        if lang_opt == Some(lang) {
-            lang_report.inc_correct(size);
+        let opt_info = detect_with_options(sentence, &options);
+
+        if let Some(info) = opt_info {
+            if lang == info.lang() {
+                lang_report.inc_correct(size, info.is_reliable());
+            } else {
+                lang_report.inc_wrong(size, Some(lang), info.is_reliable());
+            }
         } else {
-            lang_report.inc_wrong(size, lang_opt);
+            lang_report.inc_wrong(size, None, false);
         }
     }
     lang_report

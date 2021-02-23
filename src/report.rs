@@ -52,20 +52,29 @@ impl WrongCounter {
 
 pub struct Counter {
     pub wrong: WrongCounter,
-    pub correct: u32
+    pub correct: u32,
+
+    pub reliable_correct: u32,
+    pub reliable_false_postives: u32,
 }
 
 impl Counter {
     pub fn new() -> Self {
-        Self { wrong: WrongCounter::new(), correct: 0 }
+        Self { wrong: WrongCounter::new(), correct: 0, reliable_correct: 0, reliable_false_postives: 0 }
     }
 
-    pub fn inc_wrong(&mut self, lang_opt: Option<Lang>) {
+    pub fn inc_wrong(&mut self, lang_opt: Option<Lang>, is_reliable: bool) {
         self.wrong.add(lang_opt);
+        if is_reliable {
+            self.reliable_false_postives += 1;
+        }
     }
 
-    pub fn inc_correct(&mut self) {
+    pub fn inc_correct(&mut self, is_reliable: bool) {
         self.correct +=1 ;
+        if is_reliable {
+            self.reliable_correct += 1;
+        }
     }
 
     pub fn total(&self) -> u32 {
@@ -74,6 +83,14 @@ impl Counter {
 
     fn accuracy(&self) -> f64 {
         self.correct as f64 / self.total() as f64
+    }
+
+    pub fn reliable_total(&self) -> u32 {
+        self.reliable_correct + self.reliable_false_postives
+    }
+
+    pub fn reliable_accuracy(&self) -> f64 {
+        self.reliable_correct as f64 / self.reliable_total() as f64
     }
 }
 
@@ -94,16 +111,20 @@ impl LangReport {
         Self { lang, size_counters }
     }
 
-    pub fn inc_correct(&mut self, size: Size) {
-        self.size_counters[size].inc_correct();
+    pub fn inc_correct(&mut self, size: Size, is_reliable: bool) {
+        self.size_counters[size].inc_correct(is_reliable);
     }
 
-    pub fn inc_wrong(&mut self, size: Size, lang_opt: Option<Lang>) {
-        self.size_counters[size].inc_wrong(lang_opt);
+    pub fn inc_wrong(&mut self, size: Size, lang_opt: Option<Lang>, is_reliable: bool) {
+        self.size_counters[size].inc_wrong(lang_opt, is_reliable);
     }
 
     pub fn accuracy_for_size(&self, size: Size) -> f64 {
         self.size_counters[size].accuracy()
+    }
+
+    pub fn reliable_accuracy_for_size(&self, size: Size) -> f64 {
+        self.size_counters[size].reliable_accuracy()
     }
 
     pub fn avg_accuracy(&self) -> f64 {
@@ -122,22 +143,33 @@ impl LangReport {
 
 impl fmt::Display for LangReport {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "\n{}", self.lang.eng_name())?;
+        use colored::Colorize;
+
+        writeln!(f, "\n{}", self.lang.eng_name().bold())?;
 
         for (size, counter) in &self.size_counters {
             let pct = counter.accuracy() * 100.0;
-            writeln!(f, "  {:?}: {:.2}%   (total = {})", size,  pct, counter.total())?;
+            writeln!(f, "    {:?}: {:.2}%   (total = {})", size,  pct, counter.total())?;
             let mut wrong_langs: Vec<(Lang, u32)> =
                 counter.wrong.langs
                     .into_iter()
                     .filter(|(_lang, count)| *count > 0)
                     .collect();
 
-            wrong_langs.sort_by(|a, b| b.1.cmp(&a.1));
+            let reliable_pct = counter.reliable_total() as f64 / counter.total() as f64 * 100.0;
+            writeln!(f, "        is_reliable():")?;
 
+            let mut accuracy_msg = format!("            accuracy: {:.2}%", counter.reliable_accuracy() * 100.0);
+            if counter.reliable_accuracy() < 0.99 {
+                accuracy_msg = accuracy_msg.red().to_string();
+            }
+            writeln!(f, "{}", accuracy_msg)?;
+
+            wrong_langs.sort_by(|a, b| b.1.cmp(&a.1));
+            writeln!(f, "        Top false detections:")?;
             for (wrong_lang, count) in wrong_langs.iter().take(2) {
                 let wrong_pct = (*count as f64 / counter.total() as f64) * 100.0;
-                writeln!(f, "    {:.2}% : {}", wrong_pct, wrong_lang.eng_name())?;
+                writeln!(f, "            {:.2}% : {}", wrong_pct, wrong_lang.eng_name())?;
             }
         }
         writeln!(f, "  Avg: {:.2}%", self.avg_accuracy() * 100.0)?;

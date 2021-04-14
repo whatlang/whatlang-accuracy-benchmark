@@ -4,7 +4,7 @@ use std::fmt;
 // use prettytable::{Table, Row, Cell};
 use prettytable::{row, cell, Table, Row, Cell};
 
-#[derive(Debug, Clone, Copy, Enum)]
+#[derive(Debug, Clone, Copy, Enum, PartialEq, Eq)]
 pub enum Size {
     // <20 chars
     Under20,

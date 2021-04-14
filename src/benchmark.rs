@@ -1,9 +1,9 @@
 use whatlang_corpora::Corpus;
 use whatlang::Lang;
-use whatlang::{Method, detect_with_options, Options};
+use whatlang::dev::{Method, detect_with_options, Options};
 use rayon::prelude::*;
 
-use crate::report::{LangReport, OverallReport, size};
+use crate::report::{LangReport, OverallReport, size, Size};
 
 pub fn run(langs: Vec<Lang>, method: Method) -> OverallReport {
     let lang_reports: Vec<LangReport> =
@@ -35,6 +35,9 @@ fn benchmark_lang(lang: Lang, method: Method) -> LangReport {
                 lang_report.inc_correct(size, info.is_reliable());
             } else {
                 lang_report.inc_wrong(size, Some(info.lang()), info.is_reliable());
+                // if size == Size::Under20 {
+                //     println!("{}", sentence);
+                // }
             }
         } else {
             lang_report.inc_wrong(size, None, false);

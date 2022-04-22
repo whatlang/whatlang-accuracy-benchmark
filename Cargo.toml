@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 whatlang = { path = "../whatlang-rs", features = ["enum-map", "dev"] }
 whatlang-corpora = { path = "../whatlang-corpora" }
-enum-map = "*"
-enum-map-derive = "*"
+enum-map = { version = "2" }
+enum-map-derive = { version = "*" }
 rayon = "*"
 structopt = { version = "0.3" }
 prettytable-rs = "^0.8"

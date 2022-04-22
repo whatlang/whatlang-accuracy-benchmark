@@ -107,7 +107,7 @@ pub struct LangReport {
 
 impl LangReport {
     pub fn new(lang: Lang) -> Self {
-        let size_counters: EnumMap<Size, Counter> = EnumMap::new();
+        let size_counters: EnumMap<Size, Counter> = EnumMap::default();
         Self { lang, size_counters }
     }
 

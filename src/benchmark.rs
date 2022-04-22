@@ -3,7 +3,7 @@ use whatlang::Lang;
 use whatlang::dev::{Method, detect_with_options, Options};
 use rayon::prelude::*;
 
-use crate::report::{LangReport, OverallReport, size, Size};
+use crate::report::{LangReport, OverallReport, size};
 
 pub fn run(langs: Vec<Lang>, method: Method) -> OverallReport {
     let lang_reports: Vec<LangReport> =

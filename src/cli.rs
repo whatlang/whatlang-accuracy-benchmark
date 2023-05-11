@@ -1,8 +1,9 @@
+use prettytable::csv::Writer;
 use whatlang::dev::{Script, Lang, Method};
 use structopt::StructOpt;
 
 use crate::benchmark;
-use crate::report::OverallReport;
+use crate::report::{OverallReport, Library};
 
 #[derive(Debug, StructOpt)]
 #[structopt(name = "whatlang-occuracy-benchmark", about = "Runs occuracy benchmarks for whatlang library")]
@@ -18,6 +19,9 @@ struct Opt {
 
     #[structopt(short="m", long="method", default_value = "trigram")]
     method: Method,
+
+    #[structopt(short="c", long="crate", default_value = "whatlang")]
+    library: Library,
 }
 
 impl Opt {
@@ -37,11 +41,11 @@ impl Opt {
 pub fn run() {
     let opt = Opt::from_args();
     let langs = opt.langs();
-    let report = benchmark::run(langs, opt.method);
+    let report = benchmark::run(opt.library, langs, opt.method);
 
     if opt.save_report {
         save_report(&report);
-        println!("Report is written in ./reports");
+        println!("Report for `{}` crate is written in ./reports ", opt.library.to_string());
     }
 }
 
@@ -52,8 +56,10 @@ fn save_report(report: &OverallReport) {
     let timestamp = time.format("%Y-%m-%d");
 
     let destination = format!("reports/{}.md", timestamp);
+    let csv_writer = Writer::from_path(&destination).unwrap();
+    let _wtr = report.to_prettytable(false).to_csv_writer(csv_writer).unwrap();
+    
     let table = report.to_prettytable(false).to_string();
-
-    std::fs::write(destination, &table).expect("Unable to save report in file");
+    // std::fs::write(destination, &table).expect("Unable to save report in file");
     std::fs::write("reports/latest.md", &table).expect("Unable to save report in file");
 }

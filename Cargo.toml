@@ -9,10 +9,20 @@ edition = "2018"
 [dependencies]
 whatlang = { path = "../whatlang-rs", features = ["enum-map", "dev"] }
 whatlang-corpora = { path = "../whatlang-corpora" }
+whichlang = { git = "https://github.com/quickwit-oss/whichlang", rev = "e4c58f0" }
 enum-map = { version = "2" }
 enum-map-derive = { version = "*" }
 rayon = "*"
 structopt = { version = "0.3" }
-prettytable-rs = "^0.8"
+prettytable-rs = "0.10.0"
 colored = "2.0"
 chrono = "0.4"
+
+[dev-dependencies]
+bencher = "0.1.5"
+criterion = "0.4"
+
+[[bench]]
+name = "example"
+harness = false
+path = "benches/example.rs"

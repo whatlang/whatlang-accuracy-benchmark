@@ -1,14 +1,15 @@
 use whatlang_corpora::Corpus;
 use whatlang::Lang;
-use whatlang::dev::{Method, detect_with_options, Options};
+use whatlang::dev::{Method, detect_with_options, Options, FilterList};
 use rayon::prelude::*;
 
-use crate::report::{LangReport, OverallReport, size};
+use crate::report::{LangReport, OverallReport, size, Library};
 
-pub fn run(langs: Vec<Lang>, method: Method) -> OverallReport {
+pub fn run(library: Library, langs: Vec<Lang>, method: Method) -> OverallReport {
+    let lang_filter_list = FilterList::Allow(langs.clone());
     let lang_reports: Vec<LangReport> =
         langs.par_iter().map(|&lang| {
-            let lang_report = benchmark_lang(lang, method);
+            let lang_report = benchmark_lang(library, lang, method, lang_filter_list.clone());
             println!("{}", lang_report);
             lang_report
         }).collect();
@@ -19,15 +20,31 @@ pub fn run(langs: Vec<Lang>, method: Method) -> OverallReport {
     overall_report
 }
 
-fn benchmark_lang(lang: Lang, method: Method) -> LangReport {
+fn benchmark_lang(library: Library, lang: Lang, method: Method, lang_filter_list: FilterList) -> LangReport {
     let mut lang_report = LangReport::new(lang);
     let corpus = Corpus::load(lang);
 
-    let options = Options::new().set_method(method);
+    let options = Options::new()
+        .set_method(method)
+        .set_filter_list(lang_filter_list);
 
     for (_num, sentence) in corpus.sentences().enumerate() {
         let size = size(sentence);
 
+        if library == Library::WhichLang {
+            let detected_opt = whichlang::detect_language(sentence);
+            if let Some(detected_lang) = detected_opt {
+                if lang.code() == detected_lang.three_letter_code() {
+                    lang_report.inc_correct(size, true);
+                } else {
+                    lang_report.inc_wrong(size, None, true);
+                }
+            } else {
+                lang_report.inc_wrong(size, None, false);
+            }
+            continue;
+        }
+        
         let opt_info = detect_with_options(sentence, &options);
 
         if let Some(info) = opt_info {

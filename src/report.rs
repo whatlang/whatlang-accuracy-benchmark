@@ -1,8 +1,35 @@
 use whatlang::Lang;
 use enum_map::{Enum, EnumMap};
-use std::fmt;
-// use prettytable::{Table, Row, Cell};
-use prettytable::{row, cell, Table, Row, Cell};
+use std::{fmt, str::FromStr};
+use prettytable::{row, Table, Row, Cell};
+
+#[derive(Debug, Clone, Copy, Enum, PartialEq, Eq)]
+pub enum Library {
+    WhatLang,
+    WhichLang,
+}
+
+impl FromStr for Library {
+    type Err = String;
+
+    fn from_str(library_name: &str) -> Result<Self, Self::Err> {
+        match library_name {
+            "whatlang" => Ok(Library::WhatLang),
+            "whichlang" => Ok(Library::WhichLang),
+            unknown => return Err(format!("{} is an unknown crate", unknown)),
+        }
+    }
+}
+
+impl ToString for Library {
+    fn to_string(&self) -> String {
+        let name = match self {
+            Library::WhatLang => "Whatlang",
+            Library::WhichLang => "Whichlang",
+        };
+        name.to_string()
+    }
+}
 
 #[derive(Debug, Clone, Copy, Enum, PartialEq, Eq)]
 pub enum Size {
@@ -123,6 +150,7 @@ impl LangReport {
         self.size_counters[size].accuracy()
     }
 
+    #[allow(dead_code)]
     pub fn reliable_accuracy_for_size(&self, size: Size) -> f64 {
         self.size_counters[size].reliable_accuracy()
     }
